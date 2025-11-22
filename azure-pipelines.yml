@@ -48,7 +48,7 @@ steps:
 - task: ArchiveFiles@2
   displayName: 'Create ZIP package'
   inputs:
-    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish/Nop.Web'
     includeRootFolder: false
     archiveType: 'zip'
     archiveFile: '$(Build.ArtifactStagingDirectory)/nopcommerce.zip'
@@ -61,3 +61,4 @@ steps:
     azureSubscription: 'Azure subscription 1(d661f6b6-51be-46ec-a355-52db3499fb73)'
     appName: 'tallerKerlon'
     package: '$(Build.ArtifactStagingDirectory)/nopcommerce.zip'
+    deploymentMethod: 'zipDeploy'
