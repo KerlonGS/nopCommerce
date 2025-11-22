@@ -1,0 +1,63 @@
+trigger:
+  branches:
+    include:
+      - develop
+
+pool:
+  name: my_agent_pool_kerlon
+
+variables:
+  buildConfiguration: 'Release'
+  webProject: 'src/Presentation/Nop.Web/Nop.Web.csproj'
+  solution: 'src/NopCommerce.sln'
+
+steps:
+# 1. Instalar SDK .NET 9 en el agente
+- task: UseDotNet@2
+  displayName: 'Install .NET 9 SDK'
+  inputs:
+    packageType: 'sdk'
+    version: '9.x'
+
+# 2. Restaurar paquetes
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet restore'
+  inputs:
+    command: 'restore'
+    projects: '$(solution)'
+
+# 3. Compilar solución
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet build'
+  inputs:
+    command: 'build'
+    projects: '$(solution)'
+    arguments: '--configuration $(buildConfiguration)'
+
+# 4. Publicar Nop.Web
+- task: DotNetCoreCLI@2
+  displayName: 'dotnet publish Nop.Web'
+  inputs:
+    command: 'publish'
+    publishWebProjects: false
+    projects: '$(webProject)'
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/publish'
+    zipAfterPublish: false
+
+# 5. Crear ZIP para desplegar
+- task: ArchiveFiles@2
+  displayName: 'Create ZIP package'
+  inputs:
+    rootFolderOrFile: '$(Build.ArtifactStagingDirectory)/publish'
+    includeRootFolder: false
+    archiveType: 'zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/nopcommerce.zip'
+    replaceExistingArchive: true
+
+# 6. Desplegar al Web App de Azure
+- task: AzureWebApp@1
+  displayName: 'Deploy to Azure Web App'
+  inputs:
+    azureSubscription: 'Azure subscription 1(d661f6b6-51be-46ec-a355-52db3499fb73)'
+    appName: 'tallerKerlon'
+    package: '$(Build.ArtifactStagingDirectory)/nopcommerce.zip'
